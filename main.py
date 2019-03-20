@@ -35,11 +35,13 @@ def callback():
 @handler.add(MessageEvent, message=LocationMessage)
 def handle_location_message(event):
 
+    #送信された緯度・経度を取得。数値でくるので文字列化。
     lat = str(event.message.latitude)
     lon = str(event.message.longitude)
 
     url = "https://sueat.sikeserver.com/near.php?lat={0}&lon={1}".format(lat, lon)
 
+    #Sikeserverに緯度・経度を送信
     try:
         headers = {"User-Agent": "curl/7.29.0"}
         req = urllib.request.Request(url, headers=headers)
@@ -49,9 +51,11 @@ def handle_location_message(event):
         print("アクセスに失敗しました。")
         return
 
+    #混雑度の低いお店データをJSONデータとしてSikeserverから取得
     columns = []
     restaurants = json.loads(result)
 
+    #テンプレを作る
     for restaurant in restaurants:
         id = restaurant["id"]
         distance = str(restaurant["distance"])
@@ -79,7 +83,7 @@ def handle_location_message(event):
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-#    if event.type == "message":
+        #これはテスト用
         if (event.message.text == "位置座標"):
             line_bot_api.reply_message(
                 event.reply_token,
@@ -92,6 +96,7 @@ def handle_message(event):
 def handle_postback(event):
     data = event.postback.data
 
+    #テンプレから「地図を表示ボタン」を押されたら処理
     if data[0] == "M":
         id = data[1:]
         url = "https://sueat.sikeserver.com/restaurant.php?id=" + id
@@ -105,6 +110,7 @@ def handle_postback(event):
             print("アクセスに失敗しました。")
             return
 
+        #sikeserverからテンプレから押されたお店のJSONデータを取得
         columns = []
         restaurant = json.loads(result)
 
@@ -130,6 +136,5 @@ def handle_postback(event):
         line_bot_api.reply_message(event.reply_token, ImageMes)
 
 if __name__ == "__main__":
-    #65535
     port = 55555
     app.run(host="0.0.0.0", port=port)
